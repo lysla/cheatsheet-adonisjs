@@ -110,3 +110,171 @@ class MyElementSchema extends Schema {
 	}
 }
 ```
+# routes
+
+<p>Defining routing for each available data api</p>
+
+```js
+Route.resource('my_resources', 'MyResourceController').apiOnly()
+```
+
+<p>🎈 this auto generate common routing named as follow</p>
+
+```js
+Route.get('my_resources', 'MyResourceController.index').as('my_resources.index')
+Route.post('my_resources', 'MyResourceController.store').as('my_resources.store')
+Route.get('my_resources/:id', 'MyResourceController.show').as('my_resources.show')
+Route.put('my_resources/:id', 'MyResourceController.update').as('my_resources.update')
+Route.patch('my_resources/:id', 'MyResourceController.update')
+Route.delete('my_resources/:id', 'MyResourceController.destroy').as('my_resources.destroy')
+```
+
+# controllers
+
+<p>Controller configuration</p>
+
+<em>Declaration of the const model class</em>
+
+```js
+'use strict'
+const MyResource = use('App/Models/MyResource')
+//...
+```
+
+## store method (POST)
+
+<p>Creating a new record</p>
+
+```js
+//...
+async store ({ request, response }) {
+
+	// retrieving data to store
+	const { title, content } = request.post();
+
+	// creating new instance
+	const newResource = new MyResource()
+	// assigning data
+	newResource.title = title
+	newResource.content = content
+
+	// save the data to database
+	await newResource.save()
+
+	// api response
+	response.json({
+		message: 'Success',
+		data: newResource
+	})
+}
+// ...
+```
+
+<em>Alternative</em>
+
+```js
+//...
+async store ({ request, response }) {
+
+	// retrieving data to store
+	const newData = request.only(['title', 'content'])
+
+	// assigning and saving data
+	const newResource = await MyResource.create(newData)
+
+	// api response
+	response.json({
+		message: 'Success',
+		data: newResource
+	})
+}
+// ...
+```
+
+## index method (GET)
+
+<p>Show all records</p>
+
+```js
+async index ({ request, response, view }) {
+
+	// retrieving all data
+	const allResources = await MyResource.all()
+
+	// api response
+	response.json({
+		message: 'Success',
+		data: allResources
+	})
+
+}
+```
+
+## show method (GET)
+
+<p>Show a single record by a given id</p>
+
+```js
+async show ({ params, request, response, view }) {
+
+	// retrieve the data by given id
+	const theResource = await MyResource.find(params.id)
+
+	// api response
+	response.json({
+		message: 'Success',
+		data: theResource
+	})
+
+}
+```
+
+## update method (PUT or PATCH)
+
+<p>Edit an existing record by a given id and new data</p>
+
+```js
+async update ({ params, request, response }) {
+
+	// retrieve the data by given id
+	const theResource = await MyResource.find(params.id)
+
+	// retrieving new data
+    const newData = request.only(['title', 'content'])
+
+	// updating data
+	theResource.title = newData.title
+	theResource.content = newData.content
+
+	// save the data to database
+	await theResource.save()
+
+	// api response
+	response.json({
+		message: 'Success',
+		data: theResource
+	})
+
+}
+```
+
+## destroy method (DELETE)
+
+<p>Remove an existing record by a given id</p>
+
+```js
+async destroy ({ params, request, response }) {
+
+	// retrieve the data by given id
+	const theResource = await MyResource.find(params.id)
+
+	// delete the record
+	await theResource.delete()
+	
+	// api response
+	response.json({
+		message: 'Success',
+		data: theResource
+	})
+}
+```
