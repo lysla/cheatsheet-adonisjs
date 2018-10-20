@@ -3,6 +3,10 @@
 
 # installation
 
+```
+npm i -g @adonisjs/cli
+```
+
 <em><small>To execute in project directory</small></em>
 ```
 adonis new . --api-only
@@ -43,33 +47,7 @@ class MyResourceSchema extends Schema {
 }
 ```
 
-## relate multiple resources (1 to N)
-
-<p>We use a foreign key to relate one resource record to one or more some other resource's records</p>
-
-```js
-class MyElementSchema extends Schema {
-	up () {
-		this.create('my_elements', (table) => {
-			table.increments()
-			table.timestamps()
-			// my own element's fields
-			table.string('title')
-			table.text('content')
-			// foreign key to relate N records to a specific resource record
-			table.integer('fk_resource').unsigned()
-			table
-			.foreign('fk_resource')
-			.references('my_resources.id')
-			.onDelete('cascade')
-		})
-	}
-
-	down () {
-		this.drop('my_resources')
-	}
-}
-```
+<p>🎈 Remind we got to create and run proper database structure for all kind of relationships (foreign keys and pivot table for many to many) manually with migrations</p>
 
 # migrations 
 
@@ -276,5 +254,120 @@ async destroy ({ params, request, response }) {
 		message: 'Success',
 		data: theResource
 	})
+}
+```
+
+# middlewares
+
+<p>Creating a middleware</p>
+
+```
+adonis make:middleware MyMiddleware
+> HTTP Requests
+```
+
+<em><small>Then in kernel.js we need to register the middleware</small></em>
+
+```js
+// as named middleware (only for some routes)
+const namedMiddleware = {
+	//...
+	myMiddleware: 'App/Middleware/My'
+}
+```
+
+<em><small>Then in the routes.js, in the specific route you want to plate the middleware within</small></em>
+
+```js
+Route.get('my_resources/:id', 'MyResourceController.show').as('my_resources.show').middleware(['myMiddleware'])
+```
+
+<em><small>Or using resource that autogenerates routes</small></em>
+
+```js
+Route.resource('my_resources', 'MyResourceController')
+	.apiOnly()
+	.middleware(new Map([
+		[['show','update','destroy'], ['myMiddleware']]
+	]))
+```
+
+<em><small>Then in the middleware file</small></em>
+
+```js
+async handle ({ request }, next) {
+	
+	// do somethign with the request before advancing
+	console.log('My Middleware Fired')
+
+	// call next to advance the request
+	await next()
+}
+```
+
+## authentication
+
+<p>Adonis provide JWT authentication out of the box, with 'auth' and 'guest' middleware</p>
+
+<em><small>Configure routing for login and guard others</small></em>
+```js
+Route
+  .post('login', 'UserController.login')
+  .middleware('guest')
+
+Route.resource('my_resources', 'MyResourceController')
+	.apiOnly()
+	.middleware(['auth'])
+```
+
+<p>Create and configure User controller (model and starter migration are out of the box)</p>
+
+```
+adonis make:controller User
+> For HTTP requests
+```
+
+<em><small>Then in the user controller</small></em>
+
+```js
+class UserController {
+
+	async login ({ request, response, auth }) {
+		const { email, password } = request.only(['email', 'password'])
+		
+		const jwt = await auth.attempt(email, password)
+
+		// api response
+		response.json({
+			message: 'Success',
+			data: jwt
+		})
+	}
+}
+```
+
+<p>Like so, we receive a JWT token that will need to be passed throu Headers in requests to get authorization for guarded routes</p>
+
+```
+In Headers request:
+Authorization = Bearer <mytoken>
+```
+
+<p>🎈 There is no manual logout with JWT authentication, but we can configure token expiration time</p>
+
+<em><small>In auth.js</small></em>
+
+```js
+jwt: {
+	serializer: 'lucid',
+	model: 'App/Models/User',
+	scheme: 'jwt',
+	uid: 'email',
+	password: 'password',
+	options: {
+		secret: Env.get('APP_KEY'),
+		// custom token duration (in seconds)
+		expiresIn: 60
+	}
 }
 ```
