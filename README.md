@@ -503,6 +503,11 @@ async destroy ({ params, request, response }) {
 }
 ```
 
+# querying
+
+<p>Querying complex data throu modeled relationships</p>
+<p>💥 work in progress</p>
+
 # middlewares
 
 <p>Creating a middleware</p>
