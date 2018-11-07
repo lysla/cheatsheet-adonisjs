@@ -250,11 +250,19 @@ class ItemBoxSchema extends Schema {
 
 <p>Where every Item has one and only one Card</p>
 
-
+<em><small>With foreign key in Card</small></em>
 ```js
 class Item extends Model {
 	card () {
 		return this.hasOne('App/Models/Card')
+	}
+}
+```
+<em><small>With foreign key in Item</small></em>
+```js
+class Card extends Model {
+	item () {
+		return this.belongsTo('App/Models/Item')
 	}
 }
 ```
@@ -270,11 +278,6 @@ class Category extends Model {
 	}
 }
 ```
-
-### many to one - n:1
-
-<p>Where every Item(s) belongs to one and only one Category</p>
-
 ```js
 class Item extends Model {
 	category () {
@@ -503,10 +506,15 @@ async destroy ({ params, request, response }) {
 }
 ```
 
-# querying
+# querying (💥 wip)
 
-<p>Querying complex data throu modeled relationships</p>
-<p>💥 work in progress</p>
+<p>Querying complex data throu modeled relationships, retrieving a proper json structure</p>
+
+<em>Querying a specific record via its id, including its relationship(s)</em>
+
+```js
+const jsonData = await Item.query().where('id', newRecord.id).with('category').fetch()
+```
 
 # middlewares
 
