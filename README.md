@@ -572,7 +572,7 @@ async handle ({ request }, next) {
 <em><small>Configure routing for login and guard others</small></em>
 ```js
 Route
-  .post('login', 'UserController.login')
+  .post('auth', 'UserController.auth')
   .middleware('guest')
 
 Route.resource('my_resources', 'MyResourceController')
@@ -583,7 +583,7 @@ Route.resource('my_resources', 'MyResourceController')
 <p>Create and configure User controller (model and starter migration are out of the box)</p>
 
 ```
-adonis make:controller User
+adonis make:controller User --resource
 > For HTTP requests
 ```
 
@@ -592,10 +592,10 @@ adonis make:controller User
 ```js
 class UserController {
 
-	async login ({ request, response, auth }) {
+	async auth ({ request, response, auth }) {
 		const { email, password } = request.only(['email', 'password'])
 		
-		const jwt = await auth.attempt(email, password)
+		const jwt = await auth.withRefreshToken().attempt(email, password)
 
 		// api response
 		response.json({
@@ -606,7 +606,8 @@ class UserController {
 }
 ```
 
-<p>Like so, we receive a JWT token that will need to be passed throu Headers in requests to get authorization for guarded routes</p>
+<p>Like so, we receive a JWT token that will need to be passed throu Headers in requests to get authorization for guarded routes.<br>
+🎈 We also get a refresh token to use to keep log-in after the base JWT expires.</p>
 
 ```
 In Headers request:
